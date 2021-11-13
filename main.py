@@ -3,7 +3,8 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
 import xgboost as xgb
-import pickle
+#import pickle
+#import joblib
 import os
 
 from flask import Flask, request, jsonify
@@ -18,13 +19,15 @@ app.config['BASIC_AUTH_PASSWORD'] = os.environ.get('BASIC_AUTH_PASSWORD')
 basic_auth = BasicAuth(app)
 
 # Antes das APIs
-colunas = ["Gender", "Age", "Driving_License", "Region_Code", "Previously_Insured", "Vehicle_Age", "Vehicle_Damage", "Annual_Premium", "Policy_Sales_Channel", "Vintage"]
+colunas = ['Gender', 'Age', 'Driving_License', 'Region_Code', 'Previously_Insured', 'Vehicle_Age', 'Vehicle_Damage', 'Annual_Premium', 'Policy_Sales_Channel', 'Vintage']
 
-def load_model(file_name = 'xgboost_undersampling.pkl'):
-    return pickle.load(open(file_name, "rb"))
+def load_model(file_name = 'xgboost_undersampling.json'):
+    model_xgb_2 = xgb.Booster()
+    model_xgb_2.load_model(file_name)
+    return model_xgb_2
 
 # Carregar modelo treinado
-modelo = load_model('models/xgboost_undersampling.pkl')
+modelo = load_model('models/xgboost_undersampling.json')
 
 # Rota de predição de scores
 @app.route('/resultado/', methods=['POST'])
@@ -40,13 +43,13 @@ def get_score():
     status = 'Aceito'
     if score == 0:
         status = 'Não aceito'
-    return jsonify(entry_data=dados['entry_data'], score=score, status=status)
+    return jsonify(score=score, status=status)
 
-# Nova rota - recebendo CPF
-@app.route('/entrada/<entry_data>')
+# Nova rota - recebendo dados
+@app.route('/resultado/<entry>')
 @basic_auth.required
-def show_cpf(entry_data):
-    return 'Recebendo dados\nEntrada: %s'%entry_data
+def show_cpf(entry):
+    return 'Recebendo dados\nEntrada: %s'%entry
 
 # Rota padrão
 @app.route('/')
