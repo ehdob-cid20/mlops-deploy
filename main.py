@@ -18,12 +18,7 @@ app.config['BASIC_AUTH_PASSWORD'] = os.environ.get('BASIC_AUTH_PASSWORD')
 basic_auth = BasicAuth(app)
 
 # Antes das APIs
-colunas = ['RevolvingUtilizationOfUnsecuredLines', 'age',
-       'NumberOfTime30-59DaysPastDueNotWorse', 'DebtRatio', 'MonthlyIncome',
-       'NumberOfOpenCreditLinesAndLoans', 'NumberOfTimes90DaysLate',
-       'NumberRealEstateLoansOrLines', 'NumberOfTime60-89DaysPastDueNotWorse',
-       'NumberOfDependents', 'IncomePerPerson', 'NumOfPastDue', 'MonthlyDebt',
-       'NumOfOpenCreditLines', 'MonthlyBalance', 'age_sqr']
+colunas = ["Gender", "Age", "Driving_License", "Region_Code", "Previously_Insured", "Vehicle_Age", "Vehicle_Damage", "Annual_Premium", "Policy_Sales_Channel", "Vintage"]
 
 def load_model(file_name = 'xgboost_undersampling.pkl'):
     return pickle.load(open(file_name, "rb"))
@@ -32,7 +27,7 @@ def load_model(file_name = 'xgboost_undersampling.pkl'):
 modelo = load_model('models/xgboost_undersampling.pkl')
 
 # Rota de predição de scores
-@app.route('/score/', methods=['POST'])
+@app.route('/resultado/', methods=['POST'])
 @basic_auth.required
 def get_score():
     # Pegar o JSON da requisição
@@ -42,23 +37,21 @@ def get_score():
     # Fazer predição
     payload = xgb.DMatrix([payload], feature_names=colunas)
     score = np.float64(modelo.predict(payload)[0])
-    status = 'APROVADO'
-    if score <= 0.3:
-        status = 'REPROVADO'
-    elif score <= 0.6: 
-        status = 'MESA DE AVALIACAO'
-    return jsonify(cpf=dados['cpf'], score=score, status=status)
+    status = 'Aceito'
+    if score == 0:
+        status = 'Não aceito'
+    return jsonify(entry_data=dados['entry_data'], score=score, status=status)
 
 # Nova rota - recebendo CPF
-@app.route('/score/<cpf>')
+@app.route('/entrada/<entry_data>')
 @basic_auth.required
-def show_cpf(cpf):
-    return 'Recebendo dados\nCPF: %s'%cpf
+def show_cpf(entry_data):
+    return 'Recebendo dados\nEntrada: %s'%entry_data
 
 # Rota padrão
 @app.route('/')
 def home():
-    return 'API de predição de credito'
+    return 'API de analise de seguro'
 
 # Subir a API
 if __name__ == '__main__':
