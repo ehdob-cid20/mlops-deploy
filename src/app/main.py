@@ -41,7 +41,7 @@ def get_score():
     payload = xgb.DMatrix([payload], feature_names=colunas)
     score = np.float64(modelo.predict(payload)[0])
     status = 'Aceito'
-    if score == 0:
+    if score <= 0.7:
         status = 'Não aceito'
     return jsonify(score=score, status=status)
 
